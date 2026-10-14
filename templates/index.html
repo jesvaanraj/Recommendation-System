@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Personalized Recommendation System</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+<header class="hero">
+
+    <div class="logo">✦</div>
+
+    <p class="eyebrow">AI-POWERED LEARNING ASSISTANT</p>
+
+    <h1>Personalized Recommendation System</h1>
+
+    <p>
+        Intelligent recommendations based on your profile,
+        interests and goals.
+    </p>
+
+    <span class="badge">Local AI · Ollama</span>
+
+</header>
+
+
+<main class="container">
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+
+        {% if messages %}
+
+            {% for category, message in messages %}
+
+                <div class="alert {{ category }}">
+                    {{ message }}
+                </div>
+
+            {% endfor %}
+
+        {% endif %}
+
+    {% endwith %}
+
+
+    <section class="panel">
+
+        <h2>User Profile</h2>
+
+        <p class="description">
+            Enter your details to generate personalized recommendations.
+        </p>
+
+        <form action="/recommend" method="POST" class="profile-form">
+
+            <label>
+                Name
+                <input type="text"
+                       name="name"
+                       value="{{ profile.name if profile else '' }}"
+                       required>
+            </label>
+
+            <label>
+                Age
+                <input type="number"
+                       name="age"
+                       min="1"
+                       max="120"
+                       value="{{ profile.age if profile else '' }}"
+                       required>
+            </label>
+
+            <label>
+                Educational / Professional Background
+                <input type="text"
+                       name="background"
+                       value="{{ profile.background if profile else '' }}"
+                       placeholder="Computer Science"
+                       required>
+            </label>
+
+            <label>
+                Interests
+                <input type="text"
+                       name="interests"
+                       value="{{ profile.interests if profile else '' }}"
+                       placeholder="Python, Artificial Intelligence"
+                       required>
+            </label>
+
+            <label>
+                Skill Level
+
+                <select name="skill_level">
+
+                    {% for level in
+                    ['Beginner', 'Intermediate', 'Advanced'] %}
+
+                        <option value="{{ level }}"
+                        {% if profile and profile.skill_level == level %}
+                            selected
+                        {% endif %}>
+
+                            {{ level }}
+
+                        </option>
+
+                    {% endfor %}
+
+                </select>
+            </label>
+
+            <label>
+                Preferred Category
+
+                <select name="category">
+
+                    {% for category in
+                    ['Courses', 'Projects', 'Books',
+                     'Videos', 'Learning Resources', 'Career Paths'] %}
+
+                        <option value="{{ category }}"
+                        {% if profile and profile.category == category %}
+                            selected
+                        {% endif %}>
+
+                            {{ category }}
+
+                        </option>
+
+                    {% endfor %}
+
+                </select>
+            </label>
+
+            <label>
+                Learning Preference
+
+                <input type="text"
+                       name="preference"
+                       value="{{ profile.preference if profile else 'Practical learning' }}"
+                       required>
+            </label>
+
+            <label>
+                Learning Goal
+
+                <input type="text"
+                       name="goal"
+                       value="{{ profile.goal if profile else '' }}"
+                       placeholder="Learn Artificial Intelligence"
+                       required>
+            </label>
+
+            <label class="full-width">
+                Number of Recommendations
+
+                <input type="number"
+                       name="count"
+                       min="1"
+                       max="10"
+                       value="{{ profile.count if profile else 5 }}"
+                       required>
+            </label>
+
+            <button class="primary-button full-width" type="submit">
+                Generate Personalized Recommendations
+            </button>
+
+        </form>
+
+    </section>
+
+
+    {% if profile and analysis %}
+
+    <section class="panel">
+
+        <h2>User Profile Summary</h2>
+
+        <div class="grid">
+
+            <div class="info-card">
+                <span>Name</span>
+                <strong>{{ profile.name }}</strong>
+            </div>
+
+            <div class="info-card">
+                <span>Age</span>
+                <strong>{{ profile.age }}</strong>
+            </div>
+
+            <div class="info-card">
+                <span>Background</span>
+                <strong>{{ profile.background }}</strong>
+            </div>
+
+            <div class="info-card">
+                <span>Skill Level</span>
+                <strong>{{ profile.skill_level }}</strong>
+            </div>
+
+            <div class="info-card">
+                <span>Interests</span>
+                <strong>{{ profile.interests }}</strong>
+            </div>
+
+            <div class="info-card">
+                <span>Preferred Category</span>
+                <strong>{{ profile.category }}</strong>
+            </div>
+
+            <div class="info-card">
+                <span>Preference</span>
+                <strong>{{ profile.preference }}</strong>
+            </div>
+
+            <div class="info-card">
+                <span>Goal</span>
+                <strong>{{ profile.goal }}</strong>
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <section class="panel">
+
+        <h2>Preference Analysis</h2>
+
+        <div class="grid">
+
+            <div class="info-card">
+                <span>Primary Interest</span>
+                <strong>{{ analysis.primary_interest }}</strong>
+            </div>
+
+            <div class="info-card">
+                <span>Secondary Interest</span>
+                <strong>{{ analysis.secondary_interest }}</strong>
+            </div>
+
+            <div class="info-card">
+                <span>Skill Level</span>
+                <strong>{{ analysis.skill_level }}</strong>
+            </div>
+
+            <div class="info-card">
+                <span>Goal</span>
+                <strong>{{ analysis.goal }}</strong>
+            </div>
+
+            <div class="info-card">
+                <span>Category</span>
+                <strong>{{ analysis.category }}</strong>
+            </div>
+
+            <div class="info-card">
+                <span>Preference</span>
+                <strong>{{ analysis.preference }}</strong>
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <section class="panel">
+
+        <h2>Personalized Recommendations</h2>
+
+        {% if recommendations %}
+
+            {% for item in recommendations %}
+
+                <div class="recommendation-card">
+
+                    <div class="recommendation-header">
+
+                        <div>
+                            <span class="rank">
+                                RANK {{ loop.index }}
+                            </span>
+
+                            <h3>{{ item.name }}</h3>
+                        </div>
+
+                        <strong class="score">
+                            {{ "%.0f"|format(item.score) }}%
+                        </strong>
+
+                    </div>
+
+                    <div class="progress">
+
+                        <div class="progress-fill"
+                             style="width: {{ item.score }}%">
+                        </div>
+
+                    </div>
+
+                    <p>
+                        <strong>Why this is suitable:</strong>
+                        {{ item.reason }}
+                    </p>
+
+                </div>
+
+            {% endfor %}
+
+
+            <h3>Recommendation Ranking</h3>
+
+            <div class="table-container">
+
+                <table>
+
+                    <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th>Recommendation</th>
+                            <th>Suitability Score</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        {% for item in recommendations %}
+
+                            <tr>
+                                <td>{{ loop.index }}</td>
+                                <td>{{ item.name }}</td>
+                                <td>
+                                    {{ "%.0f"|format(item.score) }}%
+                                </td>
+                            </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+
+            <form action="/save" method="POST">
+
+                <button class="secondary-button" type="submit">
+                    Save Recommendations
+                </button>
+
+            </form>
+
+        {% else %}
+
+            <p>
+                Generate recommendations to see your results here.
+            </p>
+
+        {% endif %}
+
+    </section>
+
+
+    <section class="panel">
+
+        <h2>Refine Recommendations</h2>
+
+        <p class="description">
+            Tell the system what you like or want to avoid.
+        </p>
+
+        <form action="/refine" method="POST">
+
+            <label>
+                Your Feedback
+
+                <textarea name="feedback"
+                          rows="4"
+                          placeholder="I prefer AI and Python. Avoid Web Development."
+                          required></textarea>
+
+            </label>
+
+            <button class="primary-button" type="submit">
+                Refine Recommendations
+            </button>
+
+        </form>
+
+    </section>
+
+    {% endif %}
+
+
+    <section class="panel">
+
+        <h2>Intelligent Intent Detection</h2>
+
+        <p class="description">
+            Enter a command to identify the user's intent.
+        </p>
+
+        <form action="/intent" method="POST">
+
+            <label>
+                Your Command
+
+                <input type="text"
+                       name="intent_text"
+                       placeholder="Give me more beginner-friendly options"
+                       required>
+            </label>
+
+            <button class="secondary-button" type="submit">
+                Detect Intent
+            </button>
+
+        </form>
+
+        {% if detected_intent %}
+
+            <div class="intent-result">
+
+                <span>Detected Intent</span>
+
+                <h3>{{ detected_intent }}</h3>
+
+            </div>
+
+        {% endif %}
+
+    </section>
+
+
+    <footer>
+        Personalized Recommendation System |
+        Flask + Ollama
+    </footer>
+
+</main>
+
+</body>
+</html>
